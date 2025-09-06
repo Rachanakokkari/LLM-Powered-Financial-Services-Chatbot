@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceBot - Your Financial Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes typing {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        .typing-indicator {
+            animation: typing 1.5s infinite;
+        }
+        .chat-container {
+            height: calc(100vh - 200px);
+        }
+        .message-fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .fade-in {
+            animation: fadeInModal 0.3s ease-out;
+        }
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden fade-in">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="bg-blue-600 rounded-full p-3 w-16 h-16 mx-auto mb-4">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Welcome to FinanceBot</h2>
+                <p class="text-gray-600 mt-2">Sign in to access your personalized financial assistant</p>
+            </div>
+            
+            <div id="loginForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="loginEmail" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="loginPassword" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password">
+                    </div>
+                    <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+                        Sign In
+                    </button>
+                </div>
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600">Don't have an account? 
+                        <button id="showSignup" class="text-blue-600 hover:text-blue-700 font-medium">Sign up</button>
+                    </p>
+                </div>
+            </div>
+
+            <div id="signupForm" class="hidden">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" id="signupName" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your full name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="signupEmail" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="signupPassword" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Create a password">
+                    </div>
+                    <button id="signupBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors">
+                        Create Account
+                    </button>
+                </div>
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600">Already have an account? 
+                        <button id="showLogin" class="text-blue-600 hover:text-blue-700 font-medium">Sign in</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Required Modal -->
+    <div id="authRequiredModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden fade-in">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="bg-yellow-100 rounded-full p-3 w-16 h-16 mx-auto mb-4">
+                    <svg class="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Login Required</h3>
+                <p class="text-gray-600 mb-6">Please log in with your account to continue using FinanceBot and access your search history.</p>
+                <button id="authRequiredLogin" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    Login Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-blue-600 rounded-full p-3">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">FinanceBot</h1>
+                        <p class="text-gray-600">Your AI-powered financial assistant</p>
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <div id="userInfo" class="hidden items-center space-x-3">
+                        <span id="userName" class="text-gray-700 font-medium"></span>
+                        <button id="toggleHistory" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>History</span>
+                        </button>
+                        <button id="logoutBtn" class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg transition-colors">
+                            Logout
+                        </button>
+                    </div>
+                    <div id="guestInfo" class="flex items-center space-x-3">
+                        <button id="loginTrigger" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Login
+                        </button>
+                        <button id="signupTrigger" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Sign Up
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-6">
+            <!-- Chat Container -->
+            <div class="flex-1 bg-white rounded-lg shadow-lg flex flex-col chat-container">
+                <!-- Chat Messages -->
+                <div id="chatMessages" class="flex-1 p-6 overflow-y-auto space-y-4">
+                    <!-- Welcome Message -->
+                    <div class="flex items-start space-x-3 message-fade-in">
+                        <div class="bg-blue-600 rounded-full p-2 flex-shrink-0">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-4 max-w-3xl">
+                            <p class="text-gray-800">Hello! I'm FinanceBot, your AI financial assistant. I can help you understand banking terms, loans, fraud prevention, and other financial concepts. Try asking me:</p>
+                            <ul class="mt-2 text-sm text-gray-600 list-disc list-inside">
+                                <li>"What is a phishing scam?"</li>
+                                <li>"Explain credit default swap in simple terms"</li>
+                                <li>"How can I secure my online banking?"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="border-t p-6">
+                    <div class="flex space-x-4">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Ask me about banking, loans, fraud prevention, or any financial topic..."
+                            class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <button 
+                            id="sendButton" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
+                        >
+                            <span>Send</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search History Sidebar -->
+            <div id="historySidebar" class="w-80 bg-white rounded-lg shadow-lg p-6 hidden slide-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Search History</h3>
+                    <button id="closeHistory" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <button id="clearAllHistory" class="w-full bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm transition-colors">
+                        Clear All History
+                    </button>
+                </div>
+                
+                <div id="historyList" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- History items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FinanceBotAuth {
+            constructor() {
+                this.currentUser = null;
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.historySidebar = document.getElementById('historySidebar');
+                this.historyList = document.getElementById('historyList');
+                
+                this.initializeAuth();
+                this.initializeEventListeners();
+                this.checkAuthStatus();
+            }
+
+            initializeAuth() {
+                // Check if user is logged in
+                const savedUser = localStorage.getItem('financebot_user');
+                if (savedUser) {
+                    this.currentUser = JSON.parse(savedUser);
+                    this.showUserInterface();
+                    this.loadUserHistory();
+                } else {
+                    this.showGuestInterface();
+                }
+            }
+
+            initializeEventListeners() {
+                // Auth modals
+                document.getElementById('loginTrigger').addEventListener('click', () => this.showLoginModal());
+                document.getElementById('signupTrigger').addEventListener('click', () => this.showSignupModal());
+                document.getElementById('showSignup').addEventListener('click', () => this.switchToSignup());
+                document.getElementById('showLogin').addEventListener('click', () => this.switchToLogin());
+                document.getElementById('loginBtn').addEventListener('click', () => this.handleLogin());
+                document.getElementById('signupBtn').addEventListener('click', () => this.handleSignup());
+                document.getElementById('logoutBtn').addEventListener('click', () => this.handleLogout());
+                document.getElementById('authRequiredLogin').addEventListener('click', () => {
+                    this.hideAuthRequiredModal();
+                    this.showLoginModal();
+                });
+
+                // Chat functionality
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+
+                // History sidebar
+                document.getElementById('toggleHistory').addEventListener('click', () => this.toggleHistory());
+                document.getElementById('closeHistory').addEventListener('click', () => this.closeHistory());
+                document.getElementById('clearAllHistory').addEventListener('click', () => this.clearAllHistory());
+
+                // Close modals on outside click
+                document.getElementById('loginModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'loginModal') this.hideLoginModal();
+                });
+                document.getElementById('authRequiredModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'authRequiredModal') this.hideAuthRequiredModal();
+                });
+            }
+
+            checkAuthStatus() {
+                // Check authentication before allowing chat
+                this.messageInput.addEventListener('focus', () => {
+                    if (!this.currentUser) {
+                        this.showAuthRequiredModal();
+                        this.messageInput.blur();
+                    }
+                });
+            }
+
+            showLoginModal() {
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('signupForm').classList.add('hidden');
+            }
+
+            showSignupModal() {
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('signupForm').classList.remove('hidden');
+            }
+
+            hideLoginModal() {
+                document.getElementById('loginModal').classList.add('hidden');
+            }
+
+            showAuthRequiredModal() {
+                document.getElementById('authRequiredModal').classList.remove('hidden');
+            }
+
+            hideAuthRequiredModal() {
+                document.getElementById('authRequiredModal').classList.add('hidden');
+            }
+
+            switchToSignup() {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('signupForm').classList.remove('hidden');
+            }
+
+            switchToLogin() {
+                document.getElementById('signupForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+            }
+
+            handleLogin() {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+
+                if (!email || !password) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                // Simulate login (in real app, this would be an API call)
+                const users = JSON.parse(localStorage.getItem('financebot_users') || '[]');
+                const user = users.find(u => u.email === email && u.password === password);
+
+                if (user) {
+                    this.currentUser = user;
+                    localStorage.setItem('financebot_user', JSON.stringify(user));
+                    this.showUserInterface();
+                    this.hideLoginModal();
+                    this.loadUserHistory();
+                    this.showSuccessMessage('Welcome back!');
+                } else {
+                    alert('Invalid email or password');
+                }
+            }
+
+            handleSignup() {
+                const name = document.getElementById('signupName').value.trim();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value.trim();
+
+                if (!name || !email || !password) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    alert('Password must be at least 6 characters long');
+                    return;
+                }
+
+                // Simulate signup (in real app, this would be an API call)
+                const users = JSON.parse(localStorage.getItem('financebot_users') || '[]');
+                
+                if (users.find(u => u.email === email)) {
+                    alert('Email already exists');
+                    return;
+                }
+
+                const newUser = {
+                    id: Date.now().toString(),
+                    name: name,
+                    email: email,
+                    password: password,
+                    createdAt: new Date().toISOString()
+                };
+
+                users.push(newUser);
+                localStorage.setItem('financebot_users', JSON.stringify(users));
+                
+                this.currentUser = newUser;
+                localStorage.setItem('financebot_user', JSON.stringify(newUser));
+                this.showUserInterface();
+                this.hideLoginModal();
+                this.showSuccessMessage('Account created successfully!');
+            }
+
+            handleLogout() {
+                this.currentUser = null;
+                localStorage.removeItem('financebot_user');
+                this.showGuestInterface();
+                this.clearChatMessages();
+                this.closeHistory();
+                this.showSuccessMessage('Logged out successfully');
+            }
+
+            showUserInterface() {
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('userInfo').classList.add('flex');
+                document.getElementById('guestInfo').classList.add('hidden');
+                document.getElementById('userName').textContent = this.currentUser.name;
+            }
+
+            showGuestInterface() {
+                document.getElementById('userInfo').classList.add('hidden');
+                document.getElementById('guestInfo').classList.remove('hidden');
+            }
+
+            showSuccessMessage(message) {
+                // Create a temporary success message
+                const successDiv = document.createElement('div');
+                successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                successDiv.textContent = message;
+                document.body.appendChild(successDiv);
+                
+                setTimeout(() => {
+                    successDiv.remove();
+                }, 3000);
+            }
+
+            async sendMessage() {
+                if (!this.currentUser) {
+                    this.showAuthRequiredModal();
+                    return;
+                }
+
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+
+                // Add user message
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                
+                // Show typing indicator
+                this.showTypingIndicator();
+                
+                // Get bot response
+                const response = await this.getBotResponse(message);
+                this.hideTypingIndicator();
+                
+                // Add bot response
+                this.addMessage(response.answer, 'bot', response.source);
+                
+                // Save to user's history
+                this.saveToUserHistory(message, response);
+                this.updateHistoryDisplay();
+            }
+
+            addMessage(content, sender, source = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex items-start space-x-3 message-fade-in';
+                
+                const isUser = sender === 'user';
+                const alignment = isUser ? 'flex-row-reverse space-x-reverse' : '';
+                const bgColor = isUser ? 'bg-blue-600' : 'bg-gray-100';
+                const textColor = isUser ? 'text-white' : 'text-gray-800';
+                
+                messageDiv.className += ` ${alignment}`;
+                
+                messageDiv.innerHTML = `
+                    <div class="${isUser ? 'bg-blue-600' : 'bg-gray-200'} rounded-full p-2 flex-shrink-0">
+                        ${isUser ? 
+                            `<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>` :
+                            `<svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>`
+                        }
+                    </div>
+                    <div class="${bgColor} rounded-lg p-4 max-w-3xl ${textColor}">
+                        <p>${content}</p>
+                        ${source ? `<div class="mt-2 pt-2 border-t ${isUser ? 'border-blue-200' : 'border-gray-200'}"><small class="${isUser ? 'text-blue-200' : 'text-gray-500'}">Source: ${source}</small></div>` : ''}
+                    </div>
+                `;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.id = 'typingIndicator';
+                typingDiv.className = 'flex items-start space-x-3';
+                typingDiv.innerHTML = `
+                    <div class="bg-gray-200 rounded-full p-2 flex-shrink-0">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full typing-indicator"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full typing-indicator" style="animation-delay: 0.2s;"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full typing-indicator" style="animation-delay: 0.4s;"></div>
+                        </div>
+                    </div>
+                `;
+                this.chatMessages.appendChild(typingDiv);
+                this.scrollToBottom();
+            }
+
+            hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            async getBotResponse(question) {
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+                
+                // Financial knowledge base with sources
+                const responses = {
+                    'phishing': {
+                        answer: "A phishing scam is a fraudulent attempt to obtain sensitive information like usernames, passwords, and credit card details by disguising as a trustworthy entity in electronic communications. Common signs include urgent requests for personal information, suspicious email addresses, poor grammar, and links that don't match the claimed destination. Always verify requests through official channels and never click suspicious links.",
+                        source: "Federal Trade Commission (FTC) - Phishing Scams"
+                    },
+                    'credit default swap': {
+                        answer: "A credit default swap (CDS) is a financial derivative that allows an investor to swap or offset their credit risk with another investor. Think of it like insurance for bonds - if you own a bond and worry the issuer might default, you can buy a CDS. If the bond defaults, the CDS seller pays you. If not, you pay regular premiums. It's a way to transfer credit risk between parties.",
+                        source: "Investopedia - Credit Default Swap"
+                    },
+                    'online banking security': {
+                        answer: "To secure your online banking: 1) Use strong, unique passwords and enable two-factor authentication, 2) Always log in through your bank's official website or app, never through email links, 3) Use secure networks (avoid public Wi-Fi for banking), 4) Log out completely when finished, 5) Monitor your accounts regularly, 6) Keep your devices and browsers updated, 7) Set up account alerts for transactions.",
+                        source: "FDIC - Safe Internet Banking"
+                    },
+                    'mortgage': {
+                        answer: "A mortgage is a loan used to purchase real estate, where the property serves as collateral. You make monthly payments that typically include principal (loan amount), interest, taxes, and insurance (PITI). Common types include fixed-rate (same interest rate throughout) and adjustable-rate (rate can change). Most mortgages are 15 or 30 years long. If you can't make payments, the lender can foreclose on the property.",
+                        source: "Consumer Financial Protection Bureau (CFPB)"
+                    },
+                    'credit score': {
+                        answer: "A credit score is a three-digit number (typically 300-850) that represents your creditworthiness. It's calculated based on payment history (35%), credit utilization (30%), length of credit history (15%), types of credit (10%), and new credit inquiries (10%). Higher scores mean better loan terms and interest rates. You can improve your score by paying bills on time, keeping credit utilization low, and maintaining older accounts.",
+                        source: "Experian - Understanding Credit Scores"
+                    },
+                    'compound interest': {
+                        answer: "Compound interest is interest calculated on both the initial principal and previously earned interest. It's 'interest on interest' that makes your money grow exponentially over time. For example, $1,000 at 5% annual compound interest becomes $1,050 after year 1, then $1,102.50 after year 2 (earning interest on the $1,050). The key is time - the longer you invest, the more powerful compounding becomes.",
+                        source: "SEC.gov - Compound Interest Calculator"
+                    }
+                };
+
+                // Find best match
+                const lowerQuestion = question.toLowerCase();
+                let bestMatch = null;
+                let bestScore = 0;
+
+                for (const [key, response] of Object.entries(responses)) {
+                    const keywords = key.split(' ');
+                    let score = 0;
+                    
+                    keywords.forEach(keyword => {
+                        if (lowerQuestion.includes(keyword)) {
+                            score += keyword.length;
+                        }
+                    });
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = response;
+                    }
+                }
+
+                if (bestMatch) {
+                    return bestMatch;
+                }
+
+                // Default response for unmatched questions
+                return {
+                    answer: "I specialize in financial topics like banking, loans, credit, investments, and fraud prevention. Could you please rephrase your question or ask about a specific financial concept? For example, you could ask about credit scores, mortgages, phishing scams, or investment basics.",
+                    source: "FinanceBot Knowledge Base"
+                };
+            }
+
+            saveToUserHistory(question, response) {
+                if (!this.currentUser) return;
+
+                const entry = {
+                    id: Date.now().toString(),
+                    timestamp: new Date().toISOString(),
+                    question: question,
+                    answer: response.answer,
+                    source: response.source
+                };
+                
+                const historyKey = `financebot_history_${this.currentUser.id}`;
+                const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+                history.unshift(entry); // Add to beginning
+                
+                // Keep only last 50 searches
+                if (history.length > 50) {
+                    history.splice(50);
+                }
+                
+                localStorage.setItem(historyKey, JSON.stringify(history));
+            }
+
+            loadUserHistory() {
+                if (!this.currentUser) return;
+
+                const historyKey = `financebot_history_${this.currentUser.id}`;
+                const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+                
+                // Load recent conversations into chat
+                history.slice(0, 10).reverse().forEach(entry => {
+                    this.addMessage(entry.question, 'user');
+                    this.addMessage(entry.answer, 'bot', entry.source);
+                });
+
+                this.updateHistoryDisplay();
+            }
+
+            updateHistoryDisplay() {
+                if (!this.currentUser) return;
+
+                const historyKey = `financebot_history_${this.currentUser.id}`;
+                const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+                
+                this.historyList.innerHTML = '';
+                
+                if (history.length === 0) {
+                    this.historyList.innerHTML = '<p class="text-gray-500 text-center py-4">No search history yet</p>';
+                    return;
+                }
+
+                history.forEach(entry => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors';
+                    historyItem.innerHTML = `
+                        <div class="text-sm font-medium text-gray-800 mb-1">${entry.question}</div>
+                        <div class="text-xs text-gray-500">${new Date(entry.timestamp).toLocaleDateString()}</div>
+                    `;
+                    
+                    historyItem.addEventListener('click', () => {
+                        this.messageInput.value = entry.question;
+                        this.messageInput.focus();
+                    });
+                    
+                    this.historyList.appendChild(historyItem);
+                });
+            }
+
+            toggleHistory() {
+                if (this.historySidebar.classList.contains('hidden')) {
+                    this.historySidebar.classList.remove('hidden');
+                    this.updateHistoryDisplay();
+                } else {
+                    this.historySidebar.classList.add('hidden');
+                }
+            }
+
+            closeHistory() {
+                this.historySidebar.classList.add('hidden');
+            }
+
+            clearAllHistory() {
+                if (!this.currentUser) return;
+                
+                if (confirm('Are you sure you want to clear all your search history?')) {
+                    const historyKey = `financebot_history_${this.currentUser.id}`;
+                    localStorage.removeItem(historyKey);
+                    this.updateHistoryDisplay();
+                    this.clearChatMessages();
+                }
+            }
+
+            clearChatMessages() {
+                // Clear all messages except welcome message
+                const messages = this.chatMessages.children;
+                for (let i = messages.length - 1; i > 0; i--) {
+                    messages[i].remove();
+                }
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+        }
+
+        // Initialize the chatbot when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new FinanceBotAuth();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97af08d3c3584850',t:'MTc1NzE3MjkwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
